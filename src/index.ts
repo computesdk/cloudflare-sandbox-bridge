@@ -8,9 +8,16 @@
  */
 
 import { bridge } from '@cloudflare/sandbox/bridge';
+import { Sandbox as CloudflareSandbox } from '@cloudflare/sandbox';
 
-// Re-export Sandbox so Wrangler can wire up the Durable Object binding.
-export { Sandbox } from '@cloudflare/sandbox';
+// The SDK default is `sleepAfter = "10m"` counted from the last inbound
+// request. Detached executors (e.g. ComputeSDK Actions jobs) run inside the
+// container for up to hours without calling back through the bridge, so the
+// container was slept mid-run and its in-sandbox supervisor died. 24h still
+// bounds leaked sandboxes; the control plane calls destroy() when work ends.
+export class Sandbox extends CloudflareSandbox {
+  sleepAfter = '24h';
+}
 
 // Re-export WarmPool so Wrangler can wire up its Durable Object binding.
 export { WarmPool } from '@cloudflare/sandbox/bridge';
